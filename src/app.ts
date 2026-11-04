@@ -28,6 +28,23 @@ function toast(msg: string): void {
   (t as any)._t = setTimeout(() => t.classList.remove('show'), 2400);
 }
 
+type Theme = 'light' | 'dark';
+const themeButton = $<HTMLButtonElement>('#themeBtn');
+
+function setTheme(theme: Theme, save = false): void {
+  document.documentElement.dataset.theme = theme;
+  const next = theme === 'dark' ? 'light' : 'dark';
+  themeButton.textContent = theme === 'dark' ? '☼ Light' : '☾ Dark';
+  themeButton.setAttribute('aria-label', `Switch to ${next} mode`);
+  themeButton.title = `Switch to ${next} mode`;
+  themeButton.setAttribute('aria-pressed', String(theme === 'light'));
+  if (save) localStorage.setItem('anyformat-theme', theme);
+}
+
+const savedTheme = localStorage.getItem('anyformat-theme');
+setTheme(savedTheme === 'dark' ? 'dark' : 'light');
+themeButton.onclick = () => setTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light', true);
+
 /* ---------- intake ---------- */
 function loadImage(file: File, srcExt: string): Promise<ImageEntry> {
   const url = URL.createObjectURL(file);

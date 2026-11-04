@@ -23,6 +23,20 @@ function toast(msg) {
     clearTimeout(t._t);
     t._t = setTimeout(() => t.classList.remove('show'), 2400);
 }
+const themeButton = $('#themeBtn');
+function setTheme(theme, save = false) {
+    document.documentElement.dataset.theme = theme;
+    const next = theme === 'dark' ? 'light' : 'dark';
+    themeButton.textContent = theme === 'dark' ? '☼ Light' : '☾ Dark';
+    themeButton.setAttribute('aria-label', `Switch to ${next} mode`);
+    themeButton.title = `Switch to ${next} mode`;
+    themeButton.setAttribute('aria-pressed', String(theme === 'light'));
+    if (save)
+        localStorage.setItem('anyformat-theme', theme);
+}
+const savedTheme = localStorage.getItem('anyformat-theme');
+setTheme(savedTheme === 'dark' ? 'dark' : 'light');
+themeButton.onclick = () => setTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light', true);
 /* ---------- intake ---------- */
 function loadImage(file, srcExt) {
     const url = URL.createObjectURL(file);

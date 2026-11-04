@@ -13,6 +13,7 @@ Convert, crop, resize, and compress images and documents in your browser. AnyFor
 - **Work with multiple files:** Drop or select several files, switch between them in the queue, remove items, and convert all supported files.
 - **Quick file intake:** Drag files onto the page, use the file picker, or paste an image from the clipboard.
 - **Preview and download:** Preview the selected image or document text, then convert and download the result.
+- **Light and dark themes:** Light mode is the default. Switch themes from the header; your choice is saved in this browser.
 - **Runs locally:** File conversion happens in your browser. PDF support loads the PDF.js library from jsDelivr when needed.
 
 ## Supported conversions

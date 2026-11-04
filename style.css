@@ -251,12 +251,16 @@ body:not(.empty) .orbit{--o:clamp(320px,min(46vh,92vw),420px);--ob:.38;--pl:.28;
 @media (min-height:800px) and (min-width:521px){.orb-count span{display:block}}
 
 @media(max-width:640px){
+  body:not(.empty) header{flex-wrap:wrap;row-gap:8px}
+  body:not(.empty) header .left{width:100%;justify-content:space-between}
+  body:not(.empty) header .right{width:100%;justify-content:flex-end}
   .tool-guide{width:100%;margin-top:-4px;color:var(--mute);font-size:12px}
   .tool-guide summary{width:fit-content;min-height:40px;padding:10px 0;color:#c9c2ff;cursor:pointer}
   .tool-guide ul{display:grid;gap:7px;list-style:none;padding:0 12px 8px}
   .tool-guide li{line-height:1.45}
   .tool-guide b{color:var(--text);font-weight:500}
   .orb-default{gap:2px}
+  .orb-default span{font-size:10px}
   .orb-default svg{width:28px;height:28px;margin-bottom:4px}
   .orb-default b{white-space:nowrap}
   header{padding:12px 14px;gap:8px}
@@ -303,3 +307,43 @@ body:not(.empty) .orbit{--o:clamp(320px,min(46vh,92vw),420px);--ob:.38;--pl:.28;
   .toast{width:calc(100% - 32px);bottom:calc(12px + env(safe-area-inset-bottom));padding:12px 16px;text-align:center;font-size:12px}
   .crop i{width:22px;height:22px;margin:-11px}
 }
+
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f5f4fb;--card:rgba(255,255,255,.72);--line:rgba(45,37,75,.14);
+  --text:#242136;--mute:#6d687e;--a:#6956df;--b:#00718f;--c:#d34b9d;
+}
+:root[data-theme="dark"]{color-scheme:dark}
+:root[data-theme="light"] body{background:var(--bg)}
+:root[data-theme="light"] .aurora{opacity:.2}
+:root[data-theme="light"] .grain{opacity:.018}
+:root[data-theme="light"] .orb-inner{background:rgba(255,255,255,.84);box-shadow:inset 0 0 40px rgba(105,86,223,.1)}
+:root[data-theme="light"] .orb.doc .orb-inner{background:radial-gradient(circle at 30% 25%,rgba(105,86,223,.18),rgba(255,255,255,.92) 70%)}
+:root[data-theme="light"] .ring circle{stroke:rgba(45,37,75,.25)}
+:root[data-theme="light"] .controls,
+:root[data-theme="light"] .preview-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 24px 60px -34px rgba(50,42,80,.3)}
+:root[data-theme="light"] .chips button{background:rgba(255,255,255,.78)}
+:root[data-theme="light"] .chips button.on{color:#fff;background:var(--grad);border-color:transparent}
+:root[data-theme="light"] .field{background:rgba(255,255,255,.78)}
+:root[data-theme="light"] .preview-wrap{background:conic-gradient(#e5e3ed 25%,#f1f0f6 0 50%,#e5e3ed 0 75%,#f1f0f6 0) 0 0/20px 20px}
+:root[data-theme="light"] #textPreview{color:#39354a}
+:root[data-theme="light"] .back,
+:root[data-theme="light"] .pill{background:rgba(255,255,255,.72)}
+:root[data-theme="light"] .back:hover,
+:root[data-theme="light"] .pill:hover{background:#fff;border-color:rgba(45,37,75,.24)}
+:root[data-theme="light"] .ghost{border-color:var(--line)}
+:root[data-theme="light"] .ghost:hover{border-color:rgba(45,37,75,.28)}
+:root[data-theme="light"] .stats div,
+:root[data-theme="light"] .row,
+:root[data-theme="light"] .tools li{background:rgba(45,37,75,.035);border-color:rgba(45,37,75,.08)}
+:root[data-theme="light"] .row .to i{background:rgba(105,86,223,.12);color:#4d3bb5}
+:root[data-theme="light"] .spoke{color:hsl(var(--h) 58% 34%);border-color:hsl(var(--h) 62% 48% / .45);
+  background:linear-gradient(150deg,hsl(var(--h) 80% 91% / .94),hsl(var(--h) 85% 96% / .96));
+  box-shadow:0 10px 24px -14px hsl(var(--h) 70% 35% / .5),inset 0 1px 0 rgba(255,255,255,.9)}
+:root[data-theme="light"] .spoke.on{color:#fff;border-color:transparent;background:linear-gradient(150deg,hsl(var(--h) 75% 48%),hsl(calc(var(--h) + 40) 78% 42%))}
+:root[data-theme="light"] .tool-guide summary{color:#5543b2}
+:root[data-theme="light"] .modal-card{background:rgba(255,255,255,.96);box-shadow:0 40px 100px -30px rgba(42,35,70,.3)}
+:root[data-theme="light"] .modal-x{background:rgba(45,37,75,.05)}
+:root[data-theme="light"] .tip,
+:root[data-theme="light"] .toast{background:rgba(255,255,255,.96);border-color:var(--line);box-shadow:0 18px 50px -12px rgba(42,35,70,.24)}
+:root[data-theme="light"] input[type=range]{background:linear-gradient(90deg,var(--a) var(--p,50%),rgba(45,37,75,.16) var(--p,50%))}
