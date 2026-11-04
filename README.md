@@ -56,6 +56,12 @@ Open [http://localhost:8000](http://localhost:8000) in your browser. Keep the se
 
 The `build` command compiles the TypeScript source in `src/` into `dist/`. To rebuild automatically when source files change, use `npm run watch` in a separate terminal.
 
+## Deploy to GitHub Pages
+
+This repository includes a GitHub Actions workflow that builds and deploys the app when changes are pushed to `main`. It publishes only the app files (`index.html`, `style.css`, and `dist/`).
+
+After the first workflow run succeeds, visit [https://java4rohit.github.io/anyformat-file-converter/](https://java4rohit.github.io/anyformat-file-converter/). You can also start a deployment manually from the repository's **Actions** tab using **Deploy to GitHub Pages**.
+
 ## Limitations
 
 - Legacy `.doc` files are not supported; save them as `.docx` first.
