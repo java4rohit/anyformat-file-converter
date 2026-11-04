@@ -44,7 +44,7 @@
   <section class="side">
     <div class="intro">
       <h1>Drop it.<br><em>Make it anything.</em></h1>
-      <p>Drag files into the circle — convert, trim and resize in seconds.</p>
+      <p>Drop a file or tap to choose one. Convert, trim and resize in seconds.</p>
     </div>
 
     <div class="orbit" id="orbit">
@@ -56,13 +56,25 @@
         <div class="orb-ext" id="orbExt"></div>
           <div class="orb-hint">
             <div class="orb-default"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
-            <b>Drop files here</b><span>or click to browse</span></div>
+            <b>Choose files</b><span>or tap to browse</span></div>
             <div class="orb-count" id="orbCount"></div>
           </div>
         </div>
       </label>
       <nav class="spokes" id="spokes" aria-label="Tools"></nav>
     </div>
+    <details class="tool-guide" open>
+      <summary>What do these tools do?</summary>
+      <ul>
+        <li><b>Convert</b> — choose a different file format.</li>
+        <li><b>Trim</b> — crop the image to the part you want.</li>
+        <li><b>Resize</b> — change the image dimensions.</li>
+        <li><b>File size</b> — compress the output to fit a size limit.</li>
+        <li><b>Quality</b> — adjust image sharpness and file size.</li>
+        <li><b>To PDF</b> — choose PDF as the output format.</li>
+        <li><b>Save</b> — convert and download the file.</li>
+      </ul>
+    </details>
     <input type="file" id="fileInput" multiple hidden>
 
     <div class="controls" id="controls">
