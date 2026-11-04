@@ -2,11 +2,16 @@
 
 Convert, crop, resize, and compress images and documents in your browser. AnyFormat is a lightweight, client-side app: your selected files are processed on your device and are not uploaded to an AnyFormat server.
 
+## Screenshot
+
+![AnyFormat home screen](screenshots/home.png)
+
 ## Features
 
 - **Image conversion:** Open PNG, JPG/JPEG, WEBP, GIF, BMP, SVG, and AVIF images. Export as PNG, JPG, WEBP, BMP, PDF, or DOCX.
 - **Document conversion:** Open DOCX, ODT, RTF, PDF, Markdown, TXT, HTML, CSV, and JSON files. Convert between supported text/document formats listed below.
 - **PDF support:** Render PDF pages as images (up to 50 pages per PDF). If a PDF has a readable text layer, extract its text for document conversion too.
+- **Document scanner:** Capture pages one at a time with your camera, or add page photos. Export the ordered pages as a multi-page image PDF or Word document, or use English OCR to create editable text in PDF or Word.
 - **Crop images:** Drag and resize the crop frame, choose Free, 1:1, 16:9, 4:3, or 4:5, or reset the crop.
 - **Resize images:** Enter output dimensions or scale from 5% to 200%.
 - **Control output size and quality:** Set a target size in KB or MB. For lossy formats, AnyFormat lowers quality first and then dimensions to try to meet the limit. Adjust quality for JPG, WEBP, and PDF.
@@ -14,7 +19,7 @@ Convert, crop, resize, and compress images and documents in your browser. AnyFor
 - **Quick file intake:** Drag files onto the page, use the file picker, or paste an image from the clipboard.
 - **Preview and download:** Preview the selected image or document text, then convert and download the result.
 - **Light and dark themes:** Light mode is the default. Switch themes from the header; your choice is saved in this browser.
-- **Runs locally:** File conversion happens in your browser. PDF support loads the PDF.js library from jsDelivr when needed.
+- **Runs locally:** Files stay on your device. PDF support loads PDF.js from jsDelivr when needed; scanner OCR loads Tesseract.js and English language data when first used, then recognizes pages in your browser.
 
 ## Supported conversions
 
@@ -67,6 +72,7 @@ After the first workflow run succeeds, visit [https://java4rohit.github.io/anyfo
 
 - Legacy `.doc` files are not supported; save them as `.docx` first.
 - Scanned or image-only PDFs can be rendered as images, but do not have text available for document conversion.
+- Scanner OCR currently recognizes English text and needs an internet connection the first time to load its engine and language data.
 - Only the first 50 pages of a PDF are rendered as images.
 - PDF support requires an internet connection to load PDF.js from jsDelivr.
 - A requested file-size limit may not be achievable for every image or output format; the app reports when even the smallest result exceeds the limit.

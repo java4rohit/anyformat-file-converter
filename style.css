@@ -158,6 +158,30 @@ body.empty .back{display:none}
 .modal-x:hover{color:var(--text)}
 .modal h2{font:300 32px Fraunces,serif;letter-spacing:-.01em;margin-bottom:20px}
 .modal h3{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--mute);margin:28px 0 12px;font-weight:500}
+.scan-modal{z-index:30}
+.scan-card{position:relative;width:min(820px,100%);max-height:92svh;overflow:auto;padding:30px;border-radius:26px;
+  background:rgba(18,18,28,.96);border:1px solid var(--line);box-shadow:0 50px 120px -30px #000}
+.scan-card h2{font:300 32px Fraunces,serif;margin:0 44px 4px 0}
+.scan-intro,.scan-note{color:var(--mute);font-size:12px}
+.scan-camera{position:relative;margin-top:18px;aspect-ratio:16/9;min-height:200px;max-height:44svh;overflow:hidden;border-radius:18px;background:#08080d}
+.scan-camera video{display:none;width:100%;height:100%;object-fit:contain}
+.scan-camera.live video{display:block}
+.scan-camera p{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;color:#bbb8ca;font-size:13px}
+.scan-camera.live p{display:none}
+.scan-actions,.scan-footer{display:flex;align-items:center;gap:10px;margin-top:12px}
+.scan-actions .cta,.scan-footer .cta{flex:1}
+.scan-pages{display:flex;gap:10px;overflow-x:auto;padding:14px 2px 6px}
+.scan-page{position:relative;flex:0 0 86px;height:110px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+.scan-page img{width:100%;height:100%;object-fit:cover}
+.scan-page span{position:absolute;left:5px;bottom:5px;padding:2px 6px;border-radius:8px;background:#08080dcc;color:white;font-size:10px}
+.scan-page button{position:absolute;right:4px;top:4px;width:24px;height:24px;border:0;border-radius:50%;background:#08080dcc;color:white;cursor:pointer}
+.scan-format{display:flex;align-items:center;gap:12px;margin-top:12px;color:var(--mute);font-size:12px}
+.scan-format select{min-width:0;flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--text);font:500 12px Inter}
+.scan-note{margin-top:10px;line-height:1.5}
+.scan-status{min-height:20px;margin-top:6px;color:var(--a);font-size:12px}
+.scan-footer{margin-top:4px}
+.scan-footer .ghost{flex:0 0 auto;margin:0}
+.scan-card button:disabled{opacity:.5;pointer-events:none}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .stats div{padding:16px;border-radius:18px;background:var(--card);border:1px solid var(--line);text-align:center}
 .stats b{display:block;font:300 34px Fraunces,serif;background:var(--grad);-webkit-background-clip:text;color:transparent}
@@ -304,6 +328,14 @@ body:not(.empty) .orbit{--o:clamp(320px,min(46vh,92vw),420px);--ob:.38;--pl:.28;
   .tip{display:none}
   .modal{padding:12px}
   .modal-card{max-height:90svh;padding:24px 18px;border-radius:22px}
+  .scan-card{max-height:94svh;padding:24px 16px;border-radius:22px}
+  .scan-card h2{font-size:27px}
+  .scan-camera{min-height:170px;max-height:36svh}
+  .scan-actions{flex-wrap:wrap}
+  .scan-actions .cta{flex:1 1 100%}
+  .scan-format{align-items:stretch;flex-direction:column;gap:6px}
+  .scan-format select{width:100%;min-height:44px;font-size:13px}
+  .scan-footer .ghost{padding-inline:12px}
   .toast{width:calc(100% - 32px);bottom:calc(12px + env(safe-area-inset-bottom));padding:12px 16px;text-align:center;font-size:12px}
   .crop i{width:22px;height:22px;margin:-11px}
 }
@@ -343,6 +375,7 @@ body:not(.empty) .orbit{--o:clamp(320px,min(46vh,92vw),420px);--ob:.38;--pl:.28;
 :root[data-theme="light"] .spoke.on{color:#fff;border-color:transparent;background:linear-gradient(150deg,hsl(var(--h) 75% 48%),hsl(calc(var(--h) + 40) 78% 42%))}
 :root[data-theme="light"] .tool-guide summary{color:#5543b2}
 :root[data-theme="light"] .modal-card{background:rgba(255,255,255,.96);box-shadow:0 40px 100px -30px rgba(42,35,70,.3)}
+:root[data-theme="light"] .scan-card{background:rgba(255,255,255,.97);box-shadow:0 40px 100px -30px rgba(42,35,70,.3)}
 :root[data-theme="light"] .modal-x{background:rgba(45,37,75,.05)}
 :root[data-theme="light"] .tip,
 :root[data-theme="light"] .toast{background:rgba(255,255,255,.96);border-color:var(--line);box-shadow:0 18px 50px -12px rgba(42,35,70,.24)}

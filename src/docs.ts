@@ -217,13 +217,27 @@ export function blocksToDocx(blocks: Block[]): Blob {
 
 /** A .docx containing just one picture, scaled to fit the page width. */
 export async function imageToDocx(png: Blob, w: number, h: number): Promise<Blob> {
-  const MAX = 5486400, EMU = 9525; // 6in wide max
-  const k = Math.min(1, MAX / (w * EMU));
-  const cx = Math.round(w * EMU * k), cy = Math.round(h * EMU * k);
-  const drawing = `<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="Picture"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="image.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId2"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
-  const data = new Uint8Array(await png.arrayBuffer());
-  return docxPackage(drawing, [{ name: 'word/media/image1.png', data }],
-    `<Relationship Id="rId2" Type="${OD}/image" Target="media/image1.png"/>`);
+  return imagesToDocx([{ png, w, h }]);
+}
+
+/** Create a Word document with one scanned image per page. */
+export async function imagesToDocx(pages: { png: Blob; w: number; h: number }[]): Promise<Blob> {
+  if (!pages.length) throw new Error('Add at least one page to the scan');
+  const EMU = 9525, maxW = 5486400, maxH = 8229600;
+  const extra: { name: string; data: Uint8Array }[] = [];
+  const relationships: string[] = [];
+  const body = [];
+  for (const [i, page] of pages.entries()) {
+    const scale = Math.min(1, maxW / (page.w * EMU), maxH / (page.h * EMU));
+    const cx = Math.round(page.w * EMU * scale), cy = Math.round(page.h * EMU * scale);
+    const file = `image${i + 1}.png`, relId = `rId${i + 2}`;
+    const drawing = `<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${i + 1}" name="Scanned page ${i + 1}"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${i + 1}" name="${file}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${relId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+    if (i) body.push('<w:p><w:r><w:br w:type="page"/></w:r></w:p>');
+    body.push(drawing);
+    extra.push({ name: `word/media/${file}`, data: new Uint8Array(await page.png.arrayBuffer()) });
+    relationships.push(`<Relationship Id="${relId}" Type="${OD}/image" Target="media/${file}"/>`);
+  }
+  return docxPackage(body.join(''), extra, relationships.join(''));
 }
 
 /* ---------------- writing: ODT ---------------- */

@@ -73,6 +73,7 @@
         <li><b>File size</b> — compress the output to fit a size limit.</li>
         <li><b>Quality</b> — adjust image sharpness and file size.</li>
         <li><b>To PDF</b> — choose PDF as the output format.</li>
+        <li><b>Scan</b> — capture pages one by one and export PDF or Word, with optional English OCR.</li>
         <li><b>Save</b> — convert and download the file.</li>
       </ul>
     </details>
@@ -128,6 +129,37 @@
 </main>
 
 <div class="modal" id="modal"><div class="modal-card"><button class="modal-x" id="modalX" aria-label="Close">✕</button><div id="modalBody"></div></div></div>
+<div class="modal scan-modal" id="scanModal" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
+  <div class="scan-card">
+    <button class="modal-x" id="scanClose" aria-label="Close scanner">✕</button>
+    <h2 id="scanTitle">Scan documents</h2>
+    <p class="scan-intro">Capture each page in order, or add photos of your pages.</p>
+    <div class="scan-camera">
+      <video id="scanVideo" autoplay muted playsinline></video>
+      <p id="scanCameraMessage">Allow camera access to scan a page.</p>
+    </div>
+    <div class="scan-actions">
+      <button class="cta" id="scanCapture" type="button">Capture page</button>
+      <button class="ghost" id="scanPhotoBtn" type="button">Add photos</button>
+      <input id="scanPhotoInput" type="file" accept="image/*" multiple hidden>
+    </div>
+    <div class="scan-pages" id="scanPages" aria-live="polite"></div>
+    <label class="scan-format" for="scanOutput">Export as
+      <select id="scanOutput">
+        <option value="pages-pdf">PDF — scanned images, one per page</option>
+        <option value="pages-docx">Word — scanned images, one per page</option>
+        <option value="text-docx">Editable Word — English OCR text</option>
+        <option value="text-pdf">PDF — English OCR text</option>
+      </select>
+    </label>
+    <p class="scan-note">Pages stay on your device. OCR downloads its engine and English language data when first used; recognition runs in your browser.</p>
+    <p class="scan-status" id="scanStatus" role="status" aria-live="polite"></p>
+    <div class="scan-footer">
+      <button class="ghost" id="scanClear" type="button">Clear pages</button>
+      <button class="cta" id="scanExport" type="button" disabled>Export document</button>
+    </div>
+  </div>
+</div>
 <div class="tip" id="tip"></div>
 <div class="toast" id="toast"></div>
 <div class="overlay" id="overlay"><div>Release to drop</div></div>

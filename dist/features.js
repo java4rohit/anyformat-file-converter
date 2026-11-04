@@ -7,16 +7,18 @@ export const TOOL_INFO = {
     size: ['File size', 'Enter a limit in KB or MB — AnyFormat compresses until it fits'],
     quality: ['Quality', 'Compression level for JPG, WEBP and PDF'],
     pdf: ['To PDF', 'One tap to turn an image into a PDF'],
+    scan: ['Scan', 'Capture multiple pages and export images or English OCR text as PDF or Word'],
     save: ['Save', 'Convert and download'],
 };
 const TOOLS = Object.values(TOOL_INFO);
 const EXTRAS = [
     'Drop anywhere on the page, click the circle to browse, or paste an image',
     'Several files at once, with a queue and "Convert all"',
+    'Scan up to 50 pages one by one, then export page images or English OCR text as PDF or Word',
     'Multi-page PDFs: every page (up to 50) becomes its own image',
     'PDF text is extracted so the whole document can become DOCX, ODT, RTF…',
     'Back button (or Esc) returns to the start screen to choose a different file',
-    'Everything runs in your browser — files are never uploaded',
+    'Scanned pages and OCR are processed in your browser — files are never uploaded',
 ];
 const chips = (a) => a.map(x => `<i>${x}</i>`).join('');
 export function initFeatures() {

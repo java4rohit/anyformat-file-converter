@@ -16,8 +16,13 @@ export function encodeBMP(id: ImageData): Blob {
 
 /** Wrap a JPEG in a minimal single-page PDF sized to the image. */
 export async function encodePDF(jpeg: Blob, w: number, h: number): Promise<Blob> {
-  const jb = new Uint8Array(await jpeg.arrayBuffer()), enc = new TextEncoder();
-  const pw = (w * 0.75).toFixed(2), ph = (h * 0.75).toFixed(2);
+  return encodeImagesPDF([{ jpeg, w, h }]);
+}
+
+/** Combine JPEG pages into one image-based PDF. */
+export async function encodeImagesPDF(pages: { jpeg: Blob; w: number; h: number }[]): Promise<Blob> {
+  if (!pages.length) throw new Error('Add at least one page to the scan');
+  const enc = new TextEncoder();
   const parts: BlobPart[] = [], offs: number[] = [];
   let len = 0;
   const push = (d: string | Uint8Array) => {
@@ -29,17 +34,24 @@ export async function encodePDF(jpeg: Blob, w: number, h: number): Promise<Blob>
 
   push('%PDF-1.4\n');
   obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
-  obj(2, '<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
-  obj(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Contents 4 0 R /Resources << /XObject << /Im 5 0 R >> >> >>`);
-  const cs = `q ${pw} 0 0 ${ph} 0 0 cm /Im Do Q`;
-  obj(4, `<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`);
-  offs[5] = len;
-  push(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jb.length} >>\nstream\n`);
-  push(jb);
-  push('\nendstream\nendobj\n');
+  const pageIds = pages.map((_, i) => 3 + i * 3);
+  obj(2, `<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(' ')}] /Count ${pages.length} >>`);
+  for (const [i, page] of pages.entries()) {
+    const pageId = pageIds[i], contentId = pageId + 1, imageId = pageId + 2;
+    const pw = (page.w * 0.75).toFixed(2), ph = (page.h * 0.75).toFixed(2);
+    const cs = `q ${pw} 0 0 ${ph} 0 0 cm /Im Do Q`;
+    const jb = new Uint8Array(await page.jpeg.arrayBuffer());
+    obj(pageId, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Contents ${contentId} 0 R /Resources << /XObject << /Im ${imageId} 0 R >> >> >>`);
+    obj(contentId, `<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`);
+    offs[imageId] = len;
+    push(`${imageId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${page.w} /Height ${page.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jb.length} >>\nstream\n`);
+    push(jb);
+    push('\nendstream\nendobj\n');
+  }
   const xr = len;
-  let x = 'xref\n0 6\n0000000000 65535 f \n';
-  for (let i = 1; i <= 5; i++) x += String(offs[i]).padStart(10, '0') + ' 00000 n \n';
-  push(x + `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`);
+  const size = 3 + pages.length * 3;
+  let x = `xref\n0 ${size}\n0000000000 65535 f \n`;
+  for (let i = 1; i < size; i++) x += String(offs[i]).padStart(10, '0') + ' 00000 n \n';
+  push(x + `trailer\n<< /Size ${size} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`);
   return new Blob(parts, { type: 'application/pdf' });
 }

@@ -1,11 +1,12 @@
 import type { Crop, FileEntry, Format, ImageEntry, Settings } from './types.js';
 import { IMG_FORMATS, TEXT_FORMATS, TEXT_EXT } from './formats.js';
-import { encodeBMP, encodePDF } from './encoders.js';
-import { imageToDocx, readDocument } from './docs.js';
+import { encodeBMP, encodeImagesPDF, encodePDF } from './encoders.js';
+import { imageToDocx, imagesToDocx, readDocument, textToBlocks, writeDocument } from './docs.js';
 import { initFeatures, TOOL_INFO } from './features.js';
 import { convertText } from './text.js';
 import { base, ext, kb } from './util.js';
 import { extractPdfText, renderPdf } from './pdf.js';
+import { recognizePages } from './ocr.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => {
   const el = document.querySelector<T>(sel);
@@ -17,6 +18,12 @@ const files: FileEntry[] = [];
 let cur: FileEntry | null = null;
 const S: Settings = { fmt: 'png', scale: 1, quality: 0.9, ratio: null, targetBytes: null };
 const LOSSY = ['jpg', 'webp', 'pdf'];
+const MAX_SCAN_PAGES = 50;
+
+interface ScannedPage { blob: Blob; url: string; w: number; h: number }
+const scannedPages: ScannedPage[] = [];
+let cameraStream: MediaStream | null = null;
+let exportingScan = false;
 
 const isImage = (f: FileEntry | null): f is ImageEntry => f?.kind === 'image';
 
@@ -27,6 +34,229 @@ function toast(msg: string): void {
   clearTimeout((t as any)._t);
   (t as any)._t = setTimeout(() => t.classList.remove('show'), 2400);
 }
+
+/* ---------- multi-page scanner ---------- */
+const scanModal = $('#scanModal');
+const scanVideo = $<HTMLVideoElement>('#scanVideo');
+
+function scanStatus(text: string): void {
+  $('#scanStatus').textContent = text;
+}
+
+function renderScannedPages(): void {
+  const list = $('#scanPages');
+  list.replaceChildren();
+  scannedPages.forEach((page, i) => {
+    const item = document.createElement('div');
+    item.className = 'scan-page';
+    const image = new Image();
+    image.src = page.url;
+    image.alt = `Scanned page ${i + 1}`;
+    const label = document.createElement('span');
+    label.textContent = `Page ${i + 1}`;
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'remove-page';
+    remove.dataset.index = String(i);
+    remove.textContent = '×';
+    remove.setAttribute('aria-label', `Remove page ${i + 1}`);
+    item.append(image, label, remove);
+    list.appendChild(item);
+  });
+  $('#scanExport').toggleAttribute('disabled', !scannedPages.length || exportingScan);
+  $('#scanClear').toggleAttribute('disabled', !scannedPages.length || exportingScan);
+  $('#scanCapture').toggleAttribute('disabled', !cameraStream || exportingScan);
+  $('#scanPhotoBtn').toggleAttribute('disabled', exportingScan);
+  const spoke = $('#spokes').querySelector<HTMLButtonElement>('[data-id="scan"]');
+  if (spoke) spoke.setAttribute('aria-label', scannedPages.length ? `Scan documents (${scannedPages.length})` : 'Scan documents');
+}
+
+function stopScannerCamera(): void {
+  cameraStream?.getTracks().forEach(track => track.stop());
+  cameraStream = null;
+  scanVideo.srcObject = null;
+  $('.scan-camera').classList.remove('live');
+  $('#scanCameraMessage').textContent = 'Allow camera access to scan a page.';
+  renderScannedPages();
+}
+
+async function startScannerCamera(): Promise<void> {
+  if (cameraStream) return;
+  if (!navigator.mediaDevices?.getUserMedia) {
+    $('#scanCameraMessage').textContent = 'Camera access is not available here. Add photos of your pages instead.';
+    scanStatus('Camera unavailable; you can still add photos.');
+    return;
+  }
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+    scanVideo.srcObject = cameraStream;
+    await scanVideo.play();
+    $('.scan-camera').classList.add('live');
+    $('#scanCameraMessage').textContent = '';
+    scanStatus('Camera ready. Capture each page in order.');
+    renderScannedPages();
+  } catch (error) {
+    cameraStream?.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+    scanVideo.srcObject = null;
+    $('.scan-camera').classList.remove('live');
+    $('#scanCameraMessage').textContent = 'Camera unavailable. Add photos of your pages instead.';
+    scanStatus(`Camera unavailable: ${message(error)}`);
+    renderScannedPages();
+  }
+}
+
+function openScanner(): void {
+  scanModal.classList.add('on');
+  scanStatus(scannedPages.length ? `${scannedPages.length} page${scannedPages.length === 1 ? '' : 's'} ready.` : '');
+  renderScannedPages();
+  void startScannerCamera();
+}
+
+function closeScanner(): void {
+  if (exportingScan) return;
+  stopScannerCamera();
+  scanModal.classList.remove('on');
+}
+
+async function addScannedImage(source: CanvasImageSource, width: number, height: number): Promise<void> {
+  if (scannedPages.length >= MAX_SCAN_PAGES) {
+    scanStatus(`A scan can contain up to ${MAX_SCAN_PAGES} pages.`);
+    return;
+  }
+  const scale = Math.min(1, 2400 / Math.max(width, height));
+  const w = Math.max(1, Math.round(width * scale)), h = Math.max(1, Math.round(height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas not supported');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(source, 0, 0, w, h);
+  const blob = await new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob(image => image ? resolve(image) : reject(new Error('Could not save scanned page')), 'image/png'));
+  scannedPages.push({ blob, url: URL.createObjectURL(blob), w, h });
+  renderScannedPages();
+  scanStatus(`Page ${scannedPages.length} added.`);
+}
+
+async function addPhotoFile(file: File): Promise<void> {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error(`Can't read ${file.name}`));
+      image.src = url;
+    });
+    await addScannedImage(image, image.naturalWidth, image.naturalHeight);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function pageAsJpeg(page: ScannedPage): Promise<Blob> {
+  const image = new Image();
+  const url = URL.createObjectURL(page.blob);
+  try {
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error('Could not prepare scanned page for PDF'));
+      image.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = page.w;
+    canvas.height = page.h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas not supported');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, page.w, page.h);
+    ctx.drawImage(image, 0, 0);
+    return await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(jpeg => jpeg ? resolve(jpeg) : reject(new Error('Could not encode scanned page')), 'image/jpeg', 0.9));
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function downloadScan(blob: Blob, format: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `anyformat-scan.${format}`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+async function exportScan(): Promise<void> {
+  if (!scannedPages.length || exportingScan) return;
+  const format = $<HTMLSelectElement>('#scanOutput').value;
+  exportingScan = true;
+  renderScannedPages();
+  scanStatus('Preparing your document…');
+  try {
+    let blob: Blob;
+    const extension = format.endsWith('pdf') ? 'pdf' : 'docx';
+    if (format === 'pages-pdf') {
+      const pages = [];
+      for (const page of scannedPages) pages.push({ jpeg: await pageAsJpeg(page), w: page.w, h: page.h });
+      blob = await encodeImagesPDF(pages);
+    } else if (format === 'pages-docx') {
+      blob = await imagesToDocx(scannedPages.map(({ blob: png, w, h }) => ({ png, w, h })));
+    } else {
+      const text = await recognizePages(scannedPages.map(page => page.blob), scanStatus);
+      if (!text.some(page => page.trim())) throw new Error('No text was recognized. Try brighter, sharper page photos.');
+      const content = text.map((page, i) => `Page ${i + 1}\n\n${page}`).join('\n\n');
+      blob = writeDocument(textToBlocks(content, false), extension, 'anyformat-scan');
+    }
+    downloadScan(blob, extension);
+    scanStatus(`Saved anyformat-scan.${extension} (${kb(blob.size)}).`);
+    toast(`Scan exported as ${extension.toUpperCase()}`);
+  } catch (error) {
+    scanStatus(`Couldn't export scan: ${message(error)}`);
+    toast(`Scan export failed: ${message(error)}`);
+  } finally {
+    exportingScan = false;
+    renderScannedPages();
+  }
+}
+
+$('#scanClose').onclick = closeScanner;
+$('#scanCapture').onclick = async () => {
+  if (!cameraStream || !scanVideo.videoWidth) return;
+  try {
+    await addScannedImage(scanVideo, scanVideo.videoWidth, scanVideo.videoHeight);
+  } catch (error) {
+    scanStatus(message(error));
+    toast(message(error));
+  }
+};
+$('#scanPhotoBtn').onclick = () => $<HTMLInputElement>('#scanPhotoInput').click();
+$<HTMLInputElement>('#scanPhotoInput').onchange = async event => {
+  const input = event.target as HTMLInputElement;
+  for (const file of [...(input.files ?? [])]) {
+    try { await addPhotoFile(file); }
+    catch (error) { scanStatus(message(error)); toast(message(error)); }
+  }
+  input.value = '';
+};
+$('#scanPages').onclick = event => {
+  const remove = (event.target as HTMLElement).closest<HTMLButtonElement>('.remove-page');
+  if (!remove || exportingScan) return;
+  const [page] = scannedPages.splice(Number(remove.dataset.index), 1);
+  if (page) URL.revokeObjectURL(page.url);
+  renderScannedPages();
+  scanStatus(`${scannedPages.length} page${scannedPages.length === 1 ? '' : 's'} ready.`);
+};
+$('#scanClear').onclick = () => {
+  scannedPages.forEach(page => URL.revokeObjectURL(page.url));
+  scannedPages.length = 0;
+  renderScannedPages();
+  scanStatus('All pages cleared.');
+};
+$('#scanExport').onclick = () => void exportScan();
+scanModal.addEventListener('click', event => { if (event.target === scanModal) closeScanner(); });
 
 type Theme = 'light' | 'dark';
 const themeButton = $<HTMLButtonElement>('#themeBtn');
@@ -190,6 +420,7 @@ const TOOLS: Tool[] = [
   { id: 'size', tab: 'size', label: 'File size', ring: 'Size', imageOnly: true, icon: svg('<path d="M6 20h12l-2-12H8z"/><path d="M9 8a3 3 0 016 0"/>') },
   { id: 'quality', tab: 'quality', label: 'Quality', imageOnly: true, icon: svg('<path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>') },
   { id: 'pdf', label: 'To PDF', imageOnly: true, icon: svg('<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 14h6M9 17h4"/>') },
+  { id: 'scan', label: 'Scan', imageOnly: false, icon: svg('<path d="M4 7h3l2-2h6l2 2h3a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2z"/><circle cx="12" cy="13" r="3"/>') },
   { id: 'save', label: 'Save', imageOnly: false, icon: svg('<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>') },
 ];
 
@@ -220,6 +451,7 @@ function renderSpokes(img: boolean, preview = false): void {
 $('#spokes').addEventListener('click', e => {
   const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.spoke');
   if (!b) return;
+  if (b.dataset.id === 'scan') return void openScanner();
   if (!cur) return void $('#fileInput').click(); // preview ring on the start screen: go pick a file
   const id = b.dataset.id;
   if (id === 'save') return void $('#convertBtn').click();
@@ -550,6 +782,7 @@ function backToStart(): void {
 }
 $('#backBtn').onclick = backToStart;
 window.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && scanModal.classList.contains('on')) { closeScanner(); return; }
   if (e.key === 'Escape' && cur && !$('#modal').classList.contains('on')) backToStart();
 });
 initFeatures();
