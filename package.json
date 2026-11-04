@@ -1,0 +1,16 @@
+{
+  "name": "anyformat-file-converter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Drag, trim and convert files in the browser",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "serve": "python3 -m http.server 8000",
+    "dev": "tsc && npm run serve"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

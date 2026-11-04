@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AnyFormat — Drop. Trim. Convert.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="empty">
+<div class="aurora"><i></i><i></i><i></i></div>
+<div class="grain"></div>
+
+<header>
+  <div class="left">
+    <button class="back" id="backBtn" aria-label="Back to start">← Back</button>
+    <div class="brand"><span class="logo"></span>AnyFormat</div>
+  </div>
+  <div class="right">
+    <button class="pill" id="featuresBtn">✦ Features</button>
+    <div class="privacy">● Runs 100% in your browser — files never leave your device</div>
+  </div>
+</header>
+
+<main>
+  <section class="stage" id="stage">
+    <div class="preview-card">
+      <div class="preview-wrap" id="previewWrap">
+        <img id="previewImg" alt="">
+        <div class="crop" id="crop">
+          <i data-h="nw"></i><i data-h="n"></i><i data-h="ne"></i>
+          <i data-h="w"></i><i data-h="e"></i>
+          <i data-h="sw"></i><i data-h="s"></i><i data-h="se"></i>
+        </div>
+        <pre id="textPreview"></pre>
+      </div>
+      <div class="preview-meta"><span id="metaName">—</span><span id="metaInfo"></span></div>
+    </div>
+    <div class="queue" id="queue"></div>
+  </section>
+
+  <section class="side">
+    <div class="intro">
+      <h1>Drop it.<br><em>Make it anything.</em></h1>
+      <p>Drag files into the circle — convert, trim and resize in seconds.</p>
+    </div>
+
+    <div class="orbit" id="orbit">
+      <label class="orb" id="orb" for="fileInput">
+        <svg class="ring" viewBox="0 0 200 200"><circle cx="100" cy="100" r="96"/></svg>
+        <div class="orb-glow"></div>
+        <div class="orb-inner">
+          <img id="orbImg" alt="">
+        <div class="orb-ext" id="orbExt"></div>
+          <div class="orb-hint">
+            <div class="orb-default"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+            <b>Drop files here</b><span>or click to browse</span></div>
+            <div class="orb-count" id="orbCount"></div>
+          </div>
+        </div>
+      </label>
+      <nav class="spokes" id="spokes" aria-label="Tools"></nav>
+    </div>
+    <input type="file" id="fileInput" multiple hidden>
+
+    <div class="controls" id="controls">
+      <div class="group tab" data-tab="convert">
+        <div class="label">Convert to <small id="srcFmt"></small></div>
+        <div class="chips" id="chips"></div>
+      </div>
+
+      <div class="group tab" data-tab="trim">
+        <div class="label">Trim <small>drag the frame on the preview</small></div>
+        <div class="chips small" id="ratios">
+          <button data-r="free" class="on">Free</button><button data-r="1">1:1</button>
+          <button data-r="1.7778">16:9</button><button data-r="1.3333">4:3</button>
+          <button data-r="0.8">4:5</button><button data-r="reset">Reset</button>
+        </div>
+      </div>
+
+      <div class="group tab" data-tab="resize">
+        <div class="label">Resize <small id="dims"></small></div>
+        <div class="size-row">
+          <div class="field"><span>W</span><input type="number" id="outW" min="1"></div>
+          <div class="lock">⟷</div>
+          <div class="field"><span>H</span><input type="number" id="outH" min="1"></div>
+        </div>
+        <div class="slider"><input type="range" id="scale" min="5" max="200" value="100"><output id="scaleOut">100%</output></div>
+      </div>
+
+      <div class="group tab" data-tab="size">
+        <div class="label">File size <small id="targetNote">no limit</small></div>
+        <div class="size-row">
+          <div class="field"><span>≤</span><input type="number" id="targetVal" min="1" step="any" placeholder="e.g. 500"></div>
+          <div class="chips small" id="unit"><button data-u="KB" class="on">KB</button><button data-u="MB">MB</button></div>
+        </div>
+        <div class="chips small presets" id="targetPresets">
+          <button data-v="100" data-u="KB">100 KB</button><button data-v="500" data-u="KB">500 KB</button>
+          <button data-v="1" data-u="MB">1 MB</button><button data-v="2" data-u="MB">2 MB</button><button>No limit</button>
+        </div>
+        <p class="hint">Type the largest file size you want. AnyFormat lowers quality first, then dimensions, until the file fits.</p>
+      </div>
+
+      <div class="group tab" data-tab="quality">
+        <div class="label">Quality <small id="qualityNote"></small></div>
+        <div class="slider"><input type="range" id="quality" min="10" max="100" value="90"><output id="qualityOut">90%</output></div>
+      </div>
+
+      <button class="cta" id="convertBtn"><span>Convert &amp; Download</span><small id="estimate"></small></button>
+      <button class="ghost" id="convertAll">Convert all files</button>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="modal"><div class="modal-card"><button class="modal-x" id="modalX" aria-label="Close">✕</button><div id="modalBody"></div></div></div>
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+<div class="overlay" id="overlay"><div>Release to drop</div></div>
+<script type="module" src="dist/app.js"></script>
+</body>
+</html>
