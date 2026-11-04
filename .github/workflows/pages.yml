@@ -32,7 +32,7 @@ jobs:
       - name: Prepare site
         run: |
           mkdir _site
-          cp index.html style.css _site/
+          cp index.html style.css favicon.svg _site/
           cp -R dist _site/dist
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

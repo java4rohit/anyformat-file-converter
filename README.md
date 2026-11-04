@@ -64,7 +64,7 @@ The `build` command compiles the TypeScript source in `src/` into `dist/`. To re
 
 ## Deploy to GitHub Pages
 
-This repository includes a GitHub Actions workflow that builds and deploys the app when changes are pushed to `main`. It publishes only the app files (`index.html`, `style.css`, and `dist/`).
+This repository includes a GitHub Actions workflow that builds and deploys the app when changes are pushed to `main`. It publishes the app files (`index.html`, `style.css`, `favicon.svg`, and `dist/`).
 
 After the first workflow run succeeds, visit [https://java4rohit.github.io/anyformat-file-converter/](https://java4rohit.github.io/anyformat-file-converter/). You can also start a deployment manually from the repository's **Actions** tab using **Deploy to GitHub Pages**.
 
